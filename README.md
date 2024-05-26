@@ -59,14 +59,17 @@ Download the MemCat data from https://gestaltrevision.be/projects/memcat/ and pl
       - to perform both calculations and evaluations: python feature_analysis.py --calculate-features --evaluate-features --output-path ./output
 
 **Notes**
+
 - The scripts assume a specific directory structure for datasets and models.
 - Modify the paths in the scripts if your directory structure is different.
 - Ensure all necessary dependencies are installed before running the scripts.
 
-**License**
+## License
+
 This repository is licensed under the Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International (CC BY-NC-ND 4.0) license. You are free to share, copy, and redistribute the material in any medium or format for non-commercial purposes, provided appropriate credit is given, and no modifications or derivative works are made. 
 
-**Citation**
+## Citation
+
 If you use this repository in your work, please cite our paper.
 
 
