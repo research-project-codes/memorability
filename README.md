@@ -8,18 +8,19 @@ This repository contains scripts for modeling image memorability using a vgg16-b
 - Required Python packages can be installed using the provided `requirements.txt` file.
 
 ## Installation
+
 1. Clone the repository:
     git clone https://github.com/yourusername/memcat-analysis.git
     cd memcat-analysis
 2. Install the required packages:
     pip install -r requirements.txt
 
-
-
 ## Dataset
+
 Download the MemCat data from https://gestaltrevision.be/projects/memcat/ and place it in the ./MemCat/ directory.
 
 ## Analysis
+
    1. Download the pre-trained model:
       Download the vgg16 autoencoder pre-trained on ImageNet from https://github.com/Horizon2333/imagenet-autoencoder and place it in the current directory.
    2. Fine-tune autoencoder:
@@ -55,13 +56,6 @@ Download the MemCat data from https://gestaltrevision.be/projects/memcat/ and pl
       - to evaluate feature correlations with memorability scores: python feature_analysis.py --evaluate-features --output-path ./output
       - to perform both calculations and evaluations: python feature_analysis.py --calculate-features --evaluate-features --output-path ./output
 
-**Models and Data**
-The following models and data are included in the repository:
-- mem_vgg_autoencoder.pth: Finetuned  VGG autoencoder model.
-- mem_gru.pth: Trained GRU model.
-- mm_gru_statedict.pth: State dictionary for the GRU model.
-- mem_vgg_autoencoder_testLoss.csv: CSV file containing test loss data for the finetuned VGG autoencoder.
-
 **Notes**
 - The scripts assume a specific directory structure for datasets and models.
 - Modify the paths in the scripts if your directory structure is different.
@@ -70,7 +64,7 @@ The following models and data are included in the repository:
 **License**
 This repository is licensed under the Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International (CC BY-NC-ND 4.0) license. You are free to share, copy, and redistribute the material in any medium or format for non-commercial purposes, provided appropriate credit is given, and no modifications or derivative works are made. 
 
-**License**
+**Citation**
 If you use this repository in your work, please cite our paper.
 
 
