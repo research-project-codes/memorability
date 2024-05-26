@@ -6,9 +6,10 @@ and processing multiple files to extract relevant details.
 
 Usage:
 - To run the analysis for all models and save the results:
-  python correlation_analysis.py --output-path ./output
+  python autoencoder_evaluation.py --output-path ./output
 - To run the analysis for specific models and save the results:
-  python correlation_analysis.py --output-path ./output --model-names model1.pth model2.pth
+  python autoencoder_evaluation.py --output-path ./output --model-names model1.pth model2.pth
+  example: autoencoder_evaluation.py --output-path ./output --model-names mem_vgg_autoencoder.pth
 """
 
 import os
@@ -19,8 +20,6 @@ import argparse
 from scipy.stats import spearmanr
 from sklearn.utils import resample
 
-# Constants
-PATTERN = r'MemCat_Autoencoder_vgg16_lr(?P<lr>[\d\w.-]+)_bs(?P<batch_size>\d+)_LossFunc(?P<loss_type>[\w-]+)_epoch(?P<epoch>\d+)_statedict\.pth'
 
 # Helper Functions
 def get_model_filenames(directory, pattern):
@@ -119,6 +118,8 @@ def process_files(directory_path, pattern, model_names=None):
     return pd.DataFrame(details_list)
 
 def main():
+    PATTERN = r'MemCat_Autoencoder_vgg16_lr(?P<lr>[\d\w.-]+)_bs(?P<batch_size>\d+)_LossFunc(?P<loss_type>[\w-]+)_epoch(?P<epoch>\d+)_statedict\.pth'
+
     parser = argparse.ArgumentParser(description='Correlation Analysis between Memorability Scores and Reconstruction Loss')
     parser.add_argument('--output-path', type=str, required=True, help='Path to save the output files')
     parser.add_argument('--model-names', type=str, nargs='*', help='Specific model filenames to process (optional)')

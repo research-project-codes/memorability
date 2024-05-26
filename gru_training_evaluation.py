@@ -23,7 +23,7 @@ from torchvision import transforms
 from PIL import Image
 from scipy.stats import spearmanr
 from sklearn.metrics import roc_curve, auc, average_precision_score, accuracy_score, precision_score, recall_score, f1_score, confusion_matrix
-from vgg_autoencoder import VGGAutoEncoder, get_configs
+from imagenet_autoencoder_main.models import vgg
 from mem_gru import MemGRU
 import pickle
 import copy
@@ -241,13 +241,19 @@ if __name__ == "__main__":
 
     path = os.getcwd()
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    encoder_name = 'MemCat_Autoencoder_vgg16_lr5e-06_bs1_LossFunclpips-sq_epoch1_statedict.pth'
+    # Load model
+    # model_name = 'mem_vgg_autoencoder_statedict.pth'
+    model_name ='MemCat_Autoencoder_vgg16_lr1e-05_bs1_LossFunclpips-sq_epoch1_statedict.pth'
 
-    configs = get_configs()
-    state_dict = torch.load(os.path.join(path, encoder_name), map_location=device)
+    model_path = os.path.join(path, model_name)
+    
+
+    state_dict = torch.load(model_path)
+    configs = vgg.get_configs()
+    vgg_encoder = vgg.VGGEncoder(configs, enable_bn=True)
     encoder_state_dict = {k.replace('encoder.', ''): v for k, v in state_dict.items() if 'encoder.' in k}
-    vgg_encoder = VGGAutoEncoder(configs)
     vgg_encoder.load_state_dict(encoder_state_dict)
+        
     vgg_encoder = vgg_encoder.to(device)
 
     split_info = prepare_data(path)
@@ -357,7 +363,9 @@ if __name__ == "__main__":
         performance_df.to_csv('gru_performance_records.csv', index=False)
 
         # Save the best model
-        torch.save(best_model.state_dict(), "gru_model_statedict.pth") #best performing GRU model
+        torch.save(best_model.state_dict(), "mem_gru_statedict.pth") #best performing GRU model
+        torch.save(best_model, "mem_gru.pth") #best performing GRU model
+
         print("Best Model Hyperparameters:")
         print(best_hyperparams)
 
@@ -366,7 +374,7 @@ if __name__ == "__main__":
         model = MemGRU(encoder=vgg_encoder, inputsize=512*7*7, hidden_dim=best_hyperparams['hidden_layer_size'], 
                                num_layers=best_hyperparams['num_layers'], bidirectional=best_hyperparams['bidirectional'], 
                                dropout=best_hyperparams['dropout']).to(device)
-        model.load_state_dict(torch.load("gru_model_statedict.pth", map_location=device))
+        model.load_state_dict(torch.load("gmem_gru_statedict.pth", map_location=device))
 
         test_dataset = MemCatSequenceDataset(test_df, sequences=test_sequences, transform=test_preprocess)
         test_loader = DataLoader(test_dataset, batch_size=1, shuffle=False)  # Adjust batch size if needed

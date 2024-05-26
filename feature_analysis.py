@@ -1,7 +1,7 @@
 """
 Feature Analysis Script
 
-This script calculates and evaluates features for images in a dataset. It supports saving the calculated features and evaluating their correlation with memorability scores.
+This script calculates and evaluates features for images in a dataset. It supports saving the calculated features and evaluating their correlation with memorability scores and IG attributes.
 
 Usage:
 - To calculate and save the features: `python feature_analysis.py --calculate-features --output-path ./output`
@@ -167,40 +167,70 @@ def bootstrap_spearman_ci(X, y, n_bootstrap=1000):
     ci_upper = np.percentile(correlations, 97.5)
     return ci_lower, ci_upper
 
+def calculate_feature_correlations(df_features, target_col, output_path, file_name):
+    features = df_features.columns.drop(['Batch_Index', 'Image_Index', target_col])
+    results = {'Feature': list(features)}
+
+    spearman_corr = []
+    spearman_pvalues = []
+    spearman_ci_lower = []
+    spearman_ci_upper = []
+
+    for feature in features:
+        corr, pvalue = spearmanr(df_features[feature], df_features[target_col])
+        ci_lower, ci_upper = bootstrap_spearman_ci(df_features[feature].values, df_features[target_col].values)
+        
+        spearman_corr.append(corr)
+        spearman_pvalues.append(pvalue)
+        spearman_ci_lower.append(ci_lower)
+        spearman_ci_upper.append(ci_upper)
+
+    results['Spearman Correlation'] = spearman_corr
+    results['Spearman p-value'] = spearman_pvalues
+    results['Spearman CI Lower'] = spearman_ci_lower
+    results['Spearman CI Upper'] = spearman_ci_upper
+
+    results_df = pd.DataFrame(results)
+    results_df.to_csv(os.path.join(output_path, file_name), index=False)
+    print(f"Feature correlation analysis saved to '{file_name}'")
+
 # Main function
 def main():
-    parser = argparse.ArgumentParser()
+    parser = argparse.ArgumentParser(description='Feature Analysis on MemCat Dataset')
     parser.add_argument('--calculate-features', action='store_true', help="Calculate and save features")
     parser.add_argument('--evaluate-features', action='store_true', help="Evaluate feature correlations")
-    parser.add_argument('--output-path', type=str, default='.', help="Path to save outputs")
+    parser.add_argument('--output-path', type=str, required=True, help="Path to save outputs")
     args = parser.parse_args()
 
     path = os.getcwd()
     output_path = args.output_path
 
-    # Prepare data
-    split_info = prepare_data(path)
-
-    train_df = split_info[split_info['type'] == 'train']
-    val_df = split_info[split_info['type'] == 'val']
-    test_df = split_info[split_info['type'] == 'test']
-
-    train_sequences = create_sequence_mappings(train_df)
-    val_sequences = create_sequence_mappings(val_df)
-    test_sequences = create_sequence_mappings(test_df)
-
-    with open('train_sequences.pkl', 'wb') as f:
-        pickle.dump(train_sequences, f)
-    with open('val_sequences.pkl', 'wb') as f:
-        pickle.dump(val_sequences, f)
-    with open('test_sequences.pkl', 'wb') as f:
-        pickle.dump(test_sequences, f)
-
-    test_dataset = MemCatSequenceDataset(test_df, sequences=test_sequences, transform=test_preprocess)
-    batch_size = 1
-    test_loader = DataLoader(test_dataset, batch_size=batch_size, shuffle=False)
-
     if args.calculate_features:
+        # Prepare data
+        split_info = prepare_data(path)
+
+        train_df = split_info[split_info['type'] == 'train']
+        val_df = split_info[split_info['type'] == 'val']
+        test_df = split_info[split_info['type'] == 'test']
+
+        train_sequences = create_sequence_mappings(train_df)
+        val_sequences = create_sequence_mappings(val_df)
+        test_sequences = create_sequence_mappings(test_df)
+
+        with open('train_sequences.pkl', 'wb') as f:
+            pickle.dump(train_sequences, f)
+        with open('val_sequences.pkl', 'wb') as f:
+            pickle.dump(val_sequences, f)
+        with open('test_sequences.pkl', 'wb') as f:
+            pickle.dump(test_sequences, f)
+
+        # train_dataset = MemCatSequenceDataset(train_df, sequences=train_sequences, transform=train_preprocess)
+        # val_dataset = MemCatSequenceDataset(val_df, sequences=val_sequences, transform=test_preprocess)
+        test_dataset = MemCatSequenceDataset(test_df, sequences=test_sequences, transform=test_preprocess)
+
+        batch_size = 1
+        test_loader = DataLoader(test_dataset, batch_size=batch_size, shuffle=False)
+
         # Feature extraction
         df_features = pd.DataFrame()
 
@@ -242,42 +272,25 @@ def main():
         df_features = pd.read_csv(os.path.join(output_path, 'extracted_features.csv'))
         mem_scores = []
 
+        # Load sequences
+        with open('test_sequences.pkl', 'rb') as f:
+            test_sequences = pickle.load(f)
+
+        test_dataset = MemCatSequenceDataset(test_df, sequences=test_sequences, transform=test_preprocess)
+        test_loader = DataLoader(test_dataset, batch_size=1, shuffle=False)
+
         for _, (_, mem_score) in enumerate(test_loader):
             mem_scores.extend(mem_score.numpy())
 
         assert len(df_features) == len(mem_scores), "Mismatch between features and memorability scores length."
         df_features['mem_score'] = mem_scores
 
-        drop_columns = ['Batch_Index', 'Image_Index']
-        features = df_features.columns.drop(drop_columns + ['mem_score'])
+        # Calculate correlations with memorability scores
+        calculate_feature_correlations(df_features, 'mem_score', output_path, 'feature_correlation_with_mem_score.csv')
 
-        results = {'Feature': list(features)}
-
-        spearman_corr = []
-        spearman_pvalues = []
-        spearman_ci_lower = []
-        spearman_ci_upper = []
-
-        for feature in features:
-            corr, pvalue = spearmanr(df_features[feature], df_features['mem_score'])
-            ci_lower, ci_upper = bootstrap_spearman_ci(df_features[feature].values, df_features['mem_score'].values)
-
-            spearman_corr.append(corr)
-            spearman_pvalues.append(pvalue)
-            spearman_ci_lower.append(ci_lower)
-            spearman_ci_upper.append(ci_upper)
-
-        results['Spearman Correlation'] = spearman_corr
-        results['Spearman p-value'] = spearman_pvalues
-        results['Spearman CI Lower'] = spearman_ci_lower
-        results['Spearman CI Upper'] = spearman_ci_upper
-
-        # Convert results to DataFrame
-        results_df = pd.DataFrame(results)
-
-        # Save to CSV
-        results_df.to_csv(os.path.join(output_path, 'feature_correlation_with_mem_score.csv'), index=False)
-        print("Feature correlation analysis with memorability scores saved to 'feature_correlation_with_mem_score.csv'")
+        # If IG attributes are available, calculate correlations with IG attributes
+        if 'Attribution_Value' in df_features.columns:
+            calculate_feature_correlations(df_features, 'Attribution_Value', output_path, 'feature_correlation_with_ig_attributes.csv')
 
 if __name__ == "__main__":
     main()
