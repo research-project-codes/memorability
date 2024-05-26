@@ -41,7 +41,7 @@ Download the MemCat data from https://gestaltrevision.be/projects/memcat/ and pl
        python latent_analysis.py --calculate-latents --distinctiveness-analysis --output-path ./output
    6. Category plot:
       to create binned plots for each category:  python category_plot.py
-   7. **For memorability prediction using latent code:**
+    **For memorability prediction using latent code:**
    8. Split data into train, validation, and test Sets:
       to split the data:  python split_data.py
    9. Train and evaluate the GRU model:
