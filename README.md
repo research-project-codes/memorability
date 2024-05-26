@@ -44,16 +44,16 @@ Download the MemCat data from https://gestaltrevision.be/projects/memcat/ and pl
       
    For memorability prediction using latent code:
    
-   8. Split data into train, validation, and test Sets:
+   7. Split data into train, validation, and test Sets:
       to split the data:  python split_data.py
-   9. Train and evaluate the GRU model:
+   8. Train and evaluate the GRU model:
       - to train the GRU model: python gru_training_evaluation.py --train
       - to evaluate the GRU model: python gru_training_evaluation.py --evaluate
-   10. Interpret the model using Integrated Gradients analysis:
+   9. Interpret the model using Integrated Gradients analysis:
       - to save the IG attributions: python model_interpretation_IG.py --save
       - to display the attributions: python model_interpretation_IG.py --display
       - to do both: python model_interpretation_IG.py --save --display
-   11. Feature analysis: feature extraction and evaluation
+   10. Feature analysis: feature extraction and evaluation
       - to calculate and save the features: python feature_analysis.py --calculate-features --output-path ./output
       - to evaluate feature correlations with memorability scores: python feature_analysis.py --evaluate-features --output-path ./output
       - to perform both calculations and evaluations: python feature_analysis.py --calculate-features --evaluate-features --output-path ./output
